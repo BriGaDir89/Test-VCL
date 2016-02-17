@@ -52,3 +52,4 @@ test_vcl.pro.user
 *.o
 Makefile.Debug
 *.Release
+release/moc_mainwindow.cpp
