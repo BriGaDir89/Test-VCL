@@ -45,3 +45,10 @@ $RECYCLE.BIN/
 Network Trash Folder
 Temporary Items
 .apdisk
+Makefile
+release/moc_mainwindow.o
+*.exe
+test_vcl.pro.user
+*.o
+Makefile.Debug
+*.Release
