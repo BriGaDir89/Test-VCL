@@ -7,13 +7,22 @@
 #include <QFileDialog>
 #include <QStandardPaths>
 
+
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
 
-    char const *vlc_argv[] = { "" };
+    connect( &urlOpenDialog, SIGNAL( signalUrlOK(QString) ), this, SLOT( slotOpenURL(QString) ) );
+
+    stringListModel = new QStringListModel();
+    ui->listView->setModel( stringListModel );
+
+    char const *vlc_argv[] = {
+        "--verbose=2",
+        "--plugin-path=plugins"
+    };
     int vlc_argc = sizeof(vlc_argv) / sizeof(*vlc_argv);
 
     vcl_instance = libvlc_new( vlc_argc , vlc_argv );
@@ -24,34 +33,22 @@ MainWindow::MainWindow(QWidget *parent) :
     vlc_media_list_instance = libvlc_media_list_new( vcl_instance );
     libvlc_media_list_player_set_media_list( vlc_play_list_instance, vlc_media_list_instance );
 
-    QList<libvlc_event_e> list;
-    list << libvlc_MediaPlayerMediaChanged
-         << libvlc_MediaPlayerNothingSpecial
-         << libvlc_MediaPlayerOpening
-         << libvlc_MediaPlayerBuffering
-         << libvlc_MediaPlayerPlaying
-         << libvlc_MediaPlayerPaused
-         << libvlc_MediaPlayerStopped
-         << libvlc_MediaPlayerForward
-         << libvlc_MediaPlayerBackward
-         << libvlc_MediaPlayerEndReached
-         << libvlc_MediaPlayerEncounteredError
-         << libvlc_MediaPlayerTimeChanged
-         << libvlc_MediaPlayerPositionChanged
-         << libvlc_MediaPlayerSeekableChanged
-         << libvlc_MediaPlayerPausableChanged
-         << libvlc_MediaPlayerTitleChanged
-         << libvlc_MediaPlayerSnapshotTaken
-         << libvlc_MediaPlayerLengthChanged
-         << libvlc_MediaPlayerVout;
+    QList< libvlc_event_e > list;
+    list << libvlc_MediaPlayerEncounteredError
+         << libvlc_MediaPlayerPositionChanged;
 
-    foreach(const libvlc_event_e &event, list) {
+    foreach( const libvlc_event_e &event, list )
+    {
         libvlc_event_attach( vlc_events, event, libvlc_callback, this );
     }
 }
 //-----------------------------------------------------------------------------
 MainWindow::~MainWindow()
 {
+    libvlc_media_player_stop( vlc_media_player );
+    libvlc_media_player_release( vlc_media_player );
+    libvlc_release( vcl_instance );
+    ShowErrorVlc();
     delete ui;
 }
 //-----------------------------------------------------------------------------
@@ -65,21 +62,6 @@ void MainWindow::ShowErrorVlc( void )
     }
 }
 //-----------------------------------------------------------------------------
-void MainWindow::slotPlayPlayer( void )
-{
-    qDebug() << "START";
-    //vlc_media = libvlc_media_new_location( vcl_instance, "http://www.youtube.com/watch?v=cgNrZbVbq0Y" );
-    /*vlc_media = libvlc_media_new_path( vcl_instance, "qwe.avi" );
-    libvlc_media_list_add_media( vlc_media_list_instance, vlc_media );
-    vlc_media = libvlc_media_new_path( vcl_instance, "Usher - Yeah.avi" );
-    libvlc_media_list_add_media( vlc_media_list_instance, vlc_media );
-    libvlc_media_list_player_set_media_list( vlc_play_list_instance, vlc_media_list_instance );
-    tmp_media =  libvlc_media_list_item_at_index(vlc_media_list_instance, 0 );
-    libvlc_media_player_set_media( vlc_media_player, tmp_media );
-    libvlc_media_player_play(vlc_media_player);*/
-    qDebug() << "END";
-}
-//-----------------------------------------------------------------------------
 void MainWindow::on_buttonOpenFile_clicked()
 {
     QString fileName = QFileDialog::getOpenFileName( this, "Open File",
@@ -88,25 +70,30 @@ void MainWindow::on_buttonOpenFile_clicked()
     if( !fileName.isEmpty() )
     {
         fileName = QDir::toNativeSeparators( fileName );
-        libvlc_media_t *tmp_media = libvlc_media_new_path( vcl_instance, fileName.toUtf8().data() );
-        libvlc_media_list_add_media( vlc_media_list_instance, tmp_media );
-        libvlc_media_release( tmp_media );
+        QFileInfo infFile( fileName );
 
-        libvlc_media_player_set_media( vlc_media_player,
-                                       libvlc_media_list_item_at_index(vlc_media_list_instance, 0 ) );
-        libvlc_media_player_play(vlc_media_player);
+        addItemInPlayList( infFile.fileName(), true );
+        Play( stringListView.count() - 1  );
     }
 }
 //-----------------------------------------------------------------------------
-void MainWindow::on_pushButton_2_clicked()
+void MainWindow::addItemInPlayList( QString fileName, bool FileUrl )
 {
-    libvlc_media_player_stop( vlc_media_player );
-    libvlc_media_player_release( vlc_media_player );
+    stringListView << fileName;
+    stringListModel->setStringList( stringListView );
 
-    //libvlc_media_release( vlc_media );
-    libvlc_release( vcl_instance );
-
-    ShowErrorVlc();
+    libvlc_media_t *tmp_media;
+    if( FileUrl )
+    {
+        tmp_media = libvlc_media_new_path( vcl_instance, fileName.toUtf8().data() );
+    }
+    else
+    {
+         //tmp_media = libvlc_media_new_path( vcl_instance, fileName.toLatin1() );
+         tmp_media = libvlc_media_new_location( vcl_instance, fileName.toUtf8().data() );
+    }
+    libvlc_media_list_add_media( vlc_media_list_instance, tmp_media );
+    libvlc_media_release( tmp_media );
 }
 //-----------------------------------------------------------------------------
 void MainWindow::slotPositionChanged( double pos )
@@ -128,23 +115,8 @@ void MainWindow::libvlc_callback(const libvlc_event_t *event, void *data)
 
     switch(event->type)
     {
-        case libvlc_MediaPlayerMediaChanged: qDebug() << "1";
-      //      emit core->mediaChanged(event->u.media_player_media_changed.new_media);
-            break;
-        case libvlc_MediaPlayerPaused:qDebug() << "2";
-      //      emit core->paused();
-            break;
-        case libvlc_MediaPlayerStopped:qDebug() << "3";
-      //      emit core->stopped();
-            break;
-        case libvlc_MediaPlayerForward:qDebug() << "4";
-      //      emit core->forward();
-            break;
-        case libvlc_MediaPlayerEndReached:qDebug() << "5";
-       //     emit core->end();
-            break;
-        case libvlc_MediaPlayerEncounteredError:qDebug() << "6";
-       //     emit core->error();
+        case libvlc_MediaPlayerEncounteredError:
+            qDebug() << "libvlc_MediaPlayerEncounteredError";
             break;
         case libvlc_MediaPlayerPositionChanged:
             emit mainWin->slotPositionChanged( event->u.media_player_position_changed.new_position );
@@ -153,9 +125,62 @@ void MainWindow::libvlc_callback(const libvlc_event_t *event, void *data)
             break;
     }
 }
-
+//-----------------------------------------------------------------------------
 void MainWindow::on_horizontalSliderVolume_valueChanged( int value )
 {
     if( vlc_media_player )
+    {
         libvlc_audio_set_volume( vlc_media_player, value );
+        ShowErrorVlc();
+    }
 }
+//-----------------------------------------------------------------------------
+void MainWindow::Play( int index )
+{
+    libvlc_media_player_set_media( vlc_media_player,
+                                   libvlc_media_list_item_at_index( vlc_media_list_instance, index ) );
+    libvlc_media_player_play( vlc_media_player );
+    ShowErrorVlc();
+}
+//-----------------------------------------------------------------------------
+void MainWindow::on_listView_clicked(const QModelIndex &index)
+{
+    qDebug() << index.row();
+    if( vlc_media_player )
+    {
+        Play( index.row() ) ;
+    }
+}
+//-----------------------------------------------------------------------------
+void MainWindow::on_buttonPause_clicked()
+{
+    if( vlc_media_player )
+    {
+        qDebug() << "PAUSE";
+        libvlc_state_t vlc__player_state = libvlc_media_player_get_state( vlc_media_player );
+        if( vlc__player_state == libvlc_Playing )
+        {
+            libvlc_media_player_set_pause( vlc_media_player, 1 );
+        }
+        else
+        {
+            libvlc_media_player_set_pause( vlc_media_player, 0 );
+        }
+        ShowErrorVlc();
+    }
+}
+//-----------------------------------------------------------------------------
+void MainWindow::on_buttonOpenUrl_clicked()
+{
+    urlOpenDialog.show();
+}
+//-----------------------------------------------------------------------------
+void MainWindow::slotOpenURL( QString strURL )
+{
+    if( !strURL.isEmpty() )
+    {
+        qDebug() << "OPEN URL: " << strURL;
+        addItemInPlayList( strURL, false );
+    }
+}
+//-----------------------------------------------------------------------------
