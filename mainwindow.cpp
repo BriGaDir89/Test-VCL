@@ -73,27 +73,27 @@ void MainWindow::on_buttonOpenFile_clicked()
     if( !fileName.isEmpty() )
     {
         fileName = QDir::toNativeSeparators( fileName );
-        QFileInfo infFile( fileName );
-
-        addItemInPlayList( infFile.fileName(), true );
+        addItemInPlayList( fileName, true );
         Play( stringListView.count() - 1  );
     }
 }
 //-----------------------------------------------------------------------------
 void MainWindow::addItemInPlayList( QString fileName, bool FileUrl )
 {
-    stringListView << fileName;
-    stringListModel->setStringList( stringListView );
-
     libvlc_media_t *tmp_media;
     if( FileUrl )
     {
+        QFileInfo infFile( fileName );
+        stringListView << infFile.fileName();
+        stringListModel->setStringList( stringListView );
         tmp_media = libvlc_media_new_path( vcl_instance, fileName.toUtf8().data() );
     }
     else
     {
-         //tmp_media = libvlc_media_new_path( vcl_instance, fileName.toLatin1() );
-         tmp_media = libvlc_media_new_location( vcl_instance, fileName.toUtf8().data() );
+        stringListView << fileName;
+        stringListModel->setStringList( stringListView );
+        //tmp_media = libvlc_media_new_path( vcl_instance, fileName.toLatin1() );
+        tmp_media = libvlc_media_new_location( vcl_instance, fileName.toUtf8().data() );
     }
     libvlc_media_list_add_media( vlc_media_list_instance, tmp_media );
     libvlc_media_release( tmp_media );
