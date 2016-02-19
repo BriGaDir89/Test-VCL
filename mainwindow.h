@@ -40,7 +40,6 @@ private:
     libvlc_event_manager_t *vlc_events;
     libvlc_instance_t      *vcl_instance;
     libvlc_media_player_t  *vlc_media_player;
-    libvlc_media_t         *vlc_media;
     libvlc_media_list_player_t *vlc_play_list_instance;
     libvlc_media_list_t   *vlc_media_list_instance;
 

@@ -47,8 +47,11 @@ MainWindow::~MainWindow()
 {
     libvlc_media_player_stop( vlc_media_player );
     libvlc_media_player_release( vlc_media_player );
+    libvlc_media_list_player_release( vlc_play_list_instance );
+    libvlc_media_list_release( vlc_media_list_instance );
     libvlc_release( vcl_instance );
     ShowErrorVlc();
+    delete stringListModel;
     delete ui;
 }
 //-----------------------------------------------------------------------------
