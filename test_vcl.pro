@@ -13,19 +13,18 @@ TEMPLATE = app
 
 
 SOURCES += main.cpp\
-        mainwindow.cpp
+        mainwindow.cpp \
+    dialog.cpp
 
-HEADERS  += mainwindow.h
+HEADERS  += mainwindow.h \
+    dialog.h
 
-FORMS    += mainwindow.ui
+FORMS    += mainwindow.ui \
+    dialog.ui
 
-INCLUDEPATH += H:\OneDrive\GitHub\vlc-2.2.2_debug\sdk\include
-INCLUDEPATH += H:\OneDrive\GitHub\vlc-2.2.2_debug\sdk\include\vlc\plugins
-LIBS += -LH:\OneDrive\GitHub\vlc-2.2.2_debug -llibvlc
+INCLUDEPATH += sdk\include
+LIBS += -Lrelease -llibvlc
 
-#LIBS += -LH:\OneDrive\GitHub\vlc-2.2.1 -llibvlccore
-#LIBS += -LH:\OneDrive\GitHub\vlc-2.2.1 -laxvlc
-#LIBS += -LH:\OneDrive\GitHub\vlc-2.2.1 -lnpvlc
 
 CONFIG += mobility
 MOBILITY = 

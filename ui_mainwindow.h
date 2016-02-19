@@ -41,6 +41,7 @@ public:
     QListView *listView;
     QPushButton *buttonOpenFile;
     QPushButton *buttonOpenUrl;
+    QPushButton *buttonPause;
 
     void setupUi(QMainWindow *MainWindow)
     {
@@ -106,7 +107,7 @@ public:
         horizontalSliderVolume->setObjectName(QStringLiteral("horizontalSliderVolume"));
         horizontalSliderVolume->setMaximumSize(QSize(60, 16777215));
         horizontalSliderVolume->setMaximum(200);
-        horizontalSliderVolume->setValue(200);
+        horizontalSliderVolume->setValue(100);
         horizontalSliderVolume->setOrientation(Qt::Horizontal);
 
         horizontalLayout_3->addWidget(horizontalSliderVolume);
@@ -140,6 +141,12 @@ public:
 
         verticalLayout->addWidget(buttonOpenUrl);
 
+        buttonPause = new QPushButton(centralWidget);
+        buttonPause->setObjectName(QStringLiteral("buttonPause"));
+        buttonPause->setMaximumSize(QSize(200, 16777215));
+
+        verticalLayout->addWidget(buttonPause);
+
 
         horizontalLayout->addLayout(verticalLayout);
 
@@ -159,6 +166,7 @@ public:
         lineEdit->setText(QApplication::translate("MainWindow", "Volume", 0));
         buttonOpenFile->setText(QApplication::translate("MainWindow", "Add from file...", 0));
         buttonOpenUrl->setText(QApplication::translate("MainWindow", "Add from URL...", 0));
+        buttonPause->setText(QApplication::translate("MainWindow", "Play / Pause", 0));
     } // retranslateUi
 
 };
