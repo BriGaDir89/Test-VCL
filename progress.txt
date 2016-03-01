@@ -1,4 +1,19 @@
+link:
+	Скомпилированные либы: http://loydcraft.com/2015/01/28/qt5-compiled-for-raspberry-pi/
+	Сборка бинарника под малину: http://www.ics.com/blog/building-qt-and-qtwayland-raspberry-pi
+								 http://wiki.qt.io/RaspberryPi_Beginners_Guide								 
+	Прям из под винды =):	http://visualgdb.com/tutorials/raspberry/qt/embedded/
+	Плееер, QML: http://n-soft.blogspot.ru/2012/02/qml.html
+	
+	Other:	http://www.cyberforum.ru/qt/thread1421494.html
+	
 1. 25.02.2016 	19.11 - 21.06
 	Установка virtualbox.
 	Установка Ubuntu.
 	Изучение мануалов (кроскомпиляция).
+2. 01.03.2013   19.00 - 23.50
+	Установка/компилирование Qt с возможностью кроскомпиляции. 
+		// неудалось =(, миллион ошибок, ubuntu походу самая тормозная ос.
+	Изучение мануалов.
+	
+	
