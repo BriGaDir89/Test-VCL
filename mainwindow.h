@@ -34,6 +34,7 @@ private:
 
     Ui::MainWindow *ui;
     Dialog urlOpenDialog;
+    QString filePath;
     QStringList       stringListView;
     QStringListModel *stringListModel;
 

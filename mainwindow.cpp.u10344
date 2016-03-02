@@ -1,0 +1,163 @@
+#include "mainwindow.h"
+#include "ui_mainwindow.h"
+
+#include<QWindow>
+#include<QList>
+#include<windows.h>
+#include<QDebug>
+
+MainWindow::MainWindow(QWidget *parent) :
+    QMainWindow(parent),
+    ui(new Ui::MainWindow)
+{
+    ui->setupUi(this);
+    vcl_instance = NULL;
+    vlc_media_player = NULL;
+    vlc_media = NULL;
+}
+//-----------------------------------------------------------------------------
+MainWindow::~MainWindow()
+{
+    delete ui;
+}
+//-----------------------------------------------------------------------------
+void MainWindow::ShowErrorVlc( void )
+{
+    QString str_error = QString::fromUtf8( libvlc_errmsg() );
+    if( !str_error.isEmpty() )
+    {
+        qWarning() << "Error: " << str_error;
+        libvlc_clearerr();
+    }
+}
+//-----------------------------------------------------------------------------
+void MainWindow::on_buttonOpenFile_clicked()
+{
+    qDebug() << "START";
+
+    char const *vlc_argv[] = { "" };
+    int vlc_argc = sizeof(vlc_argv) / sizeof(*vlc_argv);
+
+    vcl_instance = libvlc_new( vlc_argc , vlc_argv );
+    if( !vcl_instance ) {
+        ShowErrorVlc();
+        return;
+    }
+    vlc_media_player = libvlc_media_player_new( vcl_instance );
+    vlc_events = libvlc_media_player_event_manager( vlc_media_player );
+
+    QList<libvlc_event_e> list;
+    list << libvlc_MediaPlayerMediaChanged
+         << libvlc_MediaPlayerNothingSpecial
+         << libvlc_MediaPlayerOpening
+         << libvlc_MediaPlayerBuffering
+         << libvlc_MediaPlayerPlaying
+         << libvlc_MediaPlayerPaused
+         << libvlc_MediaPlayerStopped
+         << libvlc_MediaPlayerForward
+         << libvlc_MediaPlayerBackward
+         << libvlc_MediaPlayerEndReached
+         << libvlc_MediaPlayerEncounteredError
+         << libvlc_MediaPlayerTimeChanged
+         << libvlc_MediaPlayerPositionChanged
+         << libvlc_MediaPlayerSeekableChanged
+         << libvlc_MediaPlayerPausableChanged
+         << libvlc_MediaPlayerTitleChanged
+         << libvlc_MediaPlayerSnapshotTaken
+         << libvlc_MediaPlayerLengthChanged
+         << libvlc_MediaPlayerVout;
+
+    foreach(const libvlc_event_e &event, list) {
+        libvlc_event_attach( vlc_events, event, libvlc_callback, this );
+    }
+
+
+    libvlc_media_player_set_hwnd( vlc_media_player, (void*)ui->widgetPlayer->winId() );
+
+    //vlc_media = libvlc_media_new_location( vcl_instance, "http://www.youtube.com/watch?v=cgNrZbVbq0Y" );
+
+    vlc_play_list_instance =  libvlc_media_list_player_new( vcl_instance );
+    vlc_media_list_instance = libvlc_media_list_new( vcl_instance );
+
+    vlc_media = libvlc_media_new_path( vcl_instance, "qwe.avi" );
+    libvlc_media_list_add_media( vlc_media_list_instance, vlc_media );
+    vlc_media = libvlc_media_new_path( vcl_instance, "Usher - Yeah.avi" );
+    libvlc_media_list_add_media( vlc_media_list_instance, vlc_media );
+
+    libvlc_media_list_player_set_media_list( vlc_play_list_instance, vlc_media_list_instance );
+
+
+    tmp_media =  libvlc_media_list_item_at_index(vlc_media_list_instance, 1 );
+    libvlc_media_player_set_media( vlc_media_player, tmp_media );
+
+
+    libvlc_media_player_play(vlc_media_player);
+    qDebug() << "END";
+}
+//-----------------------------------------------------------------------------
+void MainWindow::on_pushButton_2_clicked()
+{
+    libvlc_media_player_stop( vlc_media_player );
+    libvlc_media_player_release( vlc_media_player );
+
+    //libvlc_media_release( vlc_media );
+    libvlc_release( vcl_instance );
+
+    ShowErrorVlc();
+}
+//-----------------------------------------------------------------------------
+void MainWindow::on_horizontalSliderProgress_sliderMoved(int position)
+{
+    qDebug() << position;
+
+}
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+
+void MainWindow::on_horizontalSliderProgress_valueChanged( int value )
+{
+    if( vlc_media_player )
+        libvlc_media_player_set_position( vlc_media_player, ((double)value) /1000 );
+}
+
+void MainWindow::on_horizontalSliderVolume_sliderMoved(int position)
+{
+    qDebug() << libvlc_media_player_get_position(vlc_media_player );
+}
+
+void MainWindow::libvlc_callback(const libvlc_event_t *event,
+                                     void *data)
+{
+    //VlcMediaPlayer *core = (VlcMediaPlayer *)data;
+
+    switch(event->type)
+    {
+        case libvlc_MediaPlayerMediaChanged: qDebug() << "1";
+      //      emit core->mediaChanged(event->u.media_player_media_changed.new_media);
+            break;
+        case libvlc_MediaPlayerPaused:qDebug() << "2";
+      //      emit core->paused();
+            break;
+        case libvlc_MediaPlayerStopped:qDebug() << "3";
+      //      emit core->stopped();
+            break;
+        case libvlc_MediaPlayerForward:qDebug() << "4";
+      //      emit core->forward();
+            break;
+        case libvlc_MediaPlayerEndReached:qDebug() << "5";
+       //     emit core->end();
+            break;
+        case libvlc_MediaPlayerEncounteredError:qDebug() << "6";
+       //     emit core->error();
+            break;
+        case libvlc_MediaPlayerPositionChanged:qDebug() << "7";
+       //     emit core->positionChanged(event->u.media_player_position_changed.new_position);
+            break;
+        default:
+            break;
+    }
+}

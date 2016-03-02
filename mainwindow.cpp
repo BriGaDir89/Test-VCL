@@ -67,11 +67,17 @@ void MainWindow::ShowErrorVlc( void )
 //-----------------------------------------------------------------------------
 void MainWindow::on_buttonOpenFile_clicked()
 {
+    if( filePath.isEmpty() )
+    {
+        filePath = QStandardPaths::writableLocation( QStandardPaths::DesktopLocation );
+    }
     QString fileName = QFileDialog::getOpenFileName( this, "Open File",
-                                                     QStandardPaths::writableLocation( QStandardPaths::DesktopLocation ),
+                                                     filePath,
                                                      "Video (*.*)" );
     if( !fileName.isEmpty() )
     {
+        QFileInfo infFile( fileName );
+        filePath = infFile.filePath();
         fileName = QDir::toNativeSeparators( fileName );
         addItemInPlayList( fileName, true );
         Play( stringListView.count() - 1  );
